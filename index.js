@@ -32,12 +32,22 @@ var Thrimbletrimmer;
         Utilities.log = log;
         function validateVideoSubmission(data) {
             if (data.vidID && data.startOffset && data.endOffset && data.title && data.description) {
-                if (data.startOffset < data.endOffset && data.title.length <= 91) {
-                    return true;
+                if (data.startOffset < data.endOffset) {
+                    if (data.title.length <= 91) {
+                        return true;
+                    }
+                    else {
+                        Utilities.log("Failed Validation: Title longer than 91 charactgers");
+                    }
+                }
+                else {
+                    Utilities.log("Failed Validation: End greater than Start.");
                 }
             }
-            Utilities.log("Failed Validation");
-            Utilities.log(data.toString());
+            else {
+                Utilities.log("Failed Validation: Missing parameter. Require Video ID, Start, End, Title, and Description.");
+            }
+            Utilities.log(JSON.stringify(data));
             return false;
         }
         Utilities.validateVideoSubmission = validateVideoSubmission;

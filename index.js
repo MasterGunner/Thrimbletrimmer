@@ -37,7 +37,7 @@ var Thrimbletrimmer;
                         return true;
                     }
                     else {
-                        Utilities.log("Failed Validation: Title longer than 91 charactgers");
+                        Utilities.log("Failed Validation: Title longer than 91 characters");
                     }
                 }
                 else {
@@ -51,11 +51,7 @@ var Thrimbletrimmer;
             return false;
         }
         Utilities.validateVideoSubmission = validateVideoSubmission;
-        var authorizedUsers = [];
-        function loadAuthorizedUsers() {
-            authorizedUsers = fs.readFileSync(Thrimbletrimmer.Constants.USERLISTLOCATION).toString().split("\n");
-        }
-        Utilities.loadAuthorizedUsers = loadAuthorizedUsers;
+        Utilities.authorizedUsers = [];
         function auth(id_token, callback) {
             var authValidation = function (err, body) {
                 if (err) {
@@ -66,7 +62,7 @@ var Thrimbletrimmer;
                 else {
                     var userInfo = body.getPayload();
                     var userEmail = userInfo.email;
-                    if (authorizedUsers.indexOf(userEmail) >= 0) {
+                    if (Utilities.authorizedUsers.indexOf(userEmail) >= 0) {
                         Utilities.log('User Authenticated: ' + userEmail);
                         callback(true, Utilities.generateSessionId());
                     }
@@ -215,15 +211,14 @@ var Thrimbletrimmer;
     var Xannathor;
     (function (Xannathor) {
         var Server = (function () {
-            function Server(hostname, port, UserListLocation, VideosLocation, LogFolder) {
+            function Server(hostname, port, UserList, VideosLocation, LogFolder) {
                 Thrimbletrimmer.Constants.HOSTNAME = hostname;
                 Thrimbletrimmer.Constants.PORT = port;
-                Thrimbletrimmer.Constants.USERLISTLOCATION = UserListLocation;
                 Thrimbletrimmer.Constants.VIDEOSLOCATION = VideosLocation;
                 Thrimbletrimmer.Constants.LOGFOLDER = LogFolder;
                 this.app = express();
                 this.configureServerDefaults();
-                this.configureAuth();
+                this.configureAuth(UserList);
                 this.configureVideoFunctions();
                 this.app.listen(port);
                 Thrimbletrimmer.Utilities.log('Server running at http://' + hostname + ':' + port);
@@ -243,7 +238,7 @@ var Thrimbletrimmer;
                     res.send(indexPage);
                 });
             };
-            Server.prototype.configureAuth = function () {
+            Server.prototype.configureAuth = function (UserList) {
                 this.app.post('/tokensignin', function (req, res) {
                     Thrimbletrimmer.Utilities.auth(req.body.id_token, function (isAuth, sessionId) {
                         if (isAuth) {
@@ -256,7 +251,7 @@ var Thrimbletrimmer;
                         }
                     });
                 });
-                Thrimbletrimmer.Utilities.loadAuthorizedUsers();
+                Thrimbletrimmer.Utilities.authorizedUsers = UserList;
             };
             Server.prototype.configureVideoFunctions = function () {
                 this.app.get('/getwubs/:a?', function (req, res) {
